@@ -14,10 +14,11 @@ template <typename T>
 
 class shared_ptr {
 public:
+
     shared_ptr()
     {
         ptr = nullptr;
-        count_ptr = nullptr;
+        count = nullptr;
     }
 
     explicit shared_ptr(T* point)
@@ -25,77 +26,95 @@ public:
         ptr = point;
         if (point == nullptr)
         {
-            count_ptr = nullptr;
-        } else {
-            count_ptr = new std::atomic_uint;
-            *count_ptr = 1;
+            count = nullptr;
+        }
+        else
+        {
+            count = new std::atomic_uint;
+            *count = 1;
         }
     }
 
-    shared_ptr(const shared_ptr& r)
+    shared_ptr(const shared_ptr& obj)
     {
-        ptr = r.ptr;
-        count_ptr = r.count_ptr;
-        if (ptr) {
-            *count_ptr = *count_ptr + 1;
-        } else {
-            count_ptr = nullptr;
+        ptr = obj.ptr;
+        count = obj.count;
+        if (ptr)
+        {
+            *count+=1;
+        }
+        else
+        {
+            count = nullptr;
         }
     }
 
-    shared_ptr(shared_ptr&& r)
+    shared_ptr(shared_ptr&& obj)
     {
-        ptr = r.ptr;
-        count_ptr = r.count_ptr;
-        r.ptr = nullptr;
-        r.count_ptr = nullptr;
+        ptr = obj.ptr;
+        count = obj.count;
+        obj.ptr = nullptr;
+        obj.count = nullptr;
     }
 
     ~shared_ptr()
     {
-        if (count_ptr){
-            if (*count_ptr == 1)
+        if (count)
+        {
+            if (*count == 1)
             {
                 delete ptr;
-                delete count_ptr;
-            } else {
-                *count_ptr = *count_ptr - 1;
-            }}
+                delete count;
+            }
+            else
+            {
+                *count-=1;
+            }
+        }
         ptr = nullptr;
-        count_ptr = nullptr;
+        count = nullptr;
     }
 
-    auto operator=(const shared_ptr& r) -> shared_ptr&
+    auto operator=(const shared_ptr& obj) -> shared_ptr&
     {
-        if (this != &r) {
-            ptr = r.ptr;
-            count_ptr = r.count_ptr;
-            if (ptr) {
-                *count_ptr = *count_ptr + 1;
-            } else {
-                count_ptr = nullptr;
-            }}
+        if (this != &obj)
+        {
+            ptr = obj.ptr;
+            count = obj.count;
+            if (ptr)
+            {
+                *count+=1;
+            }
+            else
+            {
+                count = nullptr;
+            }
+        }
         return *this;
     }
 
-    auto operator=(shared_ptr&& r) -> shared_ptr&
+    auto operator=(shared_ptr&& obj) -> shared_ptr&
     {
-        if (this != &r){
-            ptr = r.ptr;
-            count_ptr = r.count_ptr;}
+        if (this != &obj)
+        {
+            ptr = obj.ptr;
+            count = obj.count;
+        }
         return *this;
     }
 
     operator bool() const
     {
-        if (ptr) return true;
+        if (ptr)
+            return true;
         else
             return false;
     }
 
     auto operator*() const -> T&
     {
-        if (ptr) return *ptr;
+        if (ptr)
+            return *ptr;
         else
             return nullptr;
     }
@@ -112,54 +131,68 @@ public:
 
     void reset()
     {
-        if (*count_ptr == 1)
+        if (*count == 1)
         {
             delete ptr;
-            delete count_ptr;
-        } else {
-            *count_ptr = *count_ptr - 1;}
+            delete count;
+        }
+        else
+        {
+            *count-=1;
+        }
+
         ptr = nullptr;
-        count_ptr = nullptr;
+        count = nullptr;
     }
 
     void reset(T* point)
     {
-        if (*count_ptr == 1)
+        if (*count == 1)
         {
             delete ptr;
-            delete count_ptr;
-        } else {
-            *count_ptr = *count_ptr - 1;}
+            delete count;
+        }
+        else
+        {
+            *count-=1;
+        }
         ptr = point;
         if (point == nullptr)
         {
-            count_ptr = nullptr;
-        } else {
-            count_ptr = new std::atomic_uint;
-            *count_ptr = 1;
+            count = nullptr;
+        }
+        else
+        {
+            count = new std::atomic_uint;
+            *count = 1;
         }
     }
 
-    void swap(shared_ptr& r)
+    void swap(shared_ptr& obj)
     {
-        T* tmp_ptr(std::move(r.ptr));
-        r.ptr = std::move(ptr);
+        T* tmp_ptr(std::move(obj.ptr));
+        obj.ptr = std::move(ptr);
         ptr = std::move(tmp_ptr);
-        std::atomic_uint* tmp_count_ptr = r.count_ptr;
-        r.count_ptr = count_ptr;
-        count_ptr = tmp_count_ptr;
+        std::atomic_uint* tmp_count_ptr = obj.count;
+        obj.count = count;
+        count = tmp_count_ptr;
     }
 
     auto use_count() const -> size_t
     {
-        if (count_ptr) {
-            return *count_ptr;
-        } else {return 0;}
+        if (count)
+        {
+            return *count;
+        }
+        else
+        {
+            return 0;
+        }
     }
 
 private:
     T* ptr;
-    std::atomic_uint* count_ptr;
+    std::atomic_uint* count; // кол-во указателей на объект
 };
 
 
